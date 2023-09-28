@@ -8,7 +8,7 @@ source config/tools.sh
 # Check that required tools are installed
 check_utilities
 
-sudo apt install retry
+sudo apt install retry -y
 
 SKIP_PULL=0
 DEBUG=0
