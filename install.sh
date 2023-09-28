@@ -190,5 +190,5 @@ SEEDBOX_DIR=$(pwd)
 # Run init.sh from the current directory with sudo
 sudo bash init.sh
 
-# Make run-seedbox.sh executable and run it
+# Run run-seedbox.sh
 sudo bash run-seedbox.sh

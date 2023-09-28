@@ -11,6 +11,8 @@ check_utilities
 SKIP_PULL=0
 DEBUG=0
 
+max_retries=10
+
 for i in "$@"; do
   case $i in
     --no-pull)
@@ -70,7 +72,7 @@ fi
 
 echo "[$0] ***** Checking configuration... *****"
 
-yq eval -o json config.yaml > config.json
+retry $max_retries yq eval -o json config.yaml > config.json
 
 if [[ ${CHECK_FOR_OUTDATED_CONFIG} == true ]]; then
   nb_services=$(cat config.json | jq '.services | length')
@@ -149,7 +151,7 @@ fi
 ####################################### SERVICES PARSING ######################################
 ###############################################################################################
 
-echo "[$0] ***** Generating configuration... *****"
+echo "[$0] ***** Generating configuration... *****" 
 
 # Cleanup files before start, in case there was a change we start from scratch at every script execution
 rm -f services/generated/*-vpn.yaml
@@ -170,11 +172,11 @@ for json in $(yq eval -o json config.yaml | jq -c ".services[]"); do
 
   echo-debug "[$0] ➡️  Parsing service: \"$name\"..."
 
-  # Default docker-compose filename is the service name + .yaml.
+  # Default docker-compose filename is the service name + .yaml. 
   # Take into account explicit filename if specified in config
   customFile=$(echo $json | jq -r .customFile)
   file="$name.yaml"
-  if [[ ${customFile} != "null" ]]; then 
+  if [[ ${customFile} != "null" ]]; then
     file=${customFile}
   fi
   echo-debug "[$0]    File: \"$file\"..."
@@ -268,7 +270,7 @@ rm -f rules.props
 
 # Post-transformations on the rules file
 # sed -i "s/EMPTYMAP/{}/g" traefik/custom/dynamic-rules.yaml
-# Add simple quotes around Host rule
+# Add simple quotes around Host rule  
 sed -i --regexp-extended "s/^(.*: )(Host.*$)/\1'\2'/g" traefik/custom/dynamic-rules.yaml
 # Add double quotes around the backend traefik service
 sed -i --regexp-extended "s/^(.*url: )(.*$)/\1\"\2\"/g" traefik/custom/dynamic-rules.yaml
@@ -281,16 +283,20 @@ echo "[$0] ***** Config OK. Launching services... *****"
 
 if [[ "${SKIP_PULL}" != "1" ]]; then
   echo "[$0] ***** Pulling all images... *****"
-  ${DOCKER_COMPOSE_BINARY} ${ALL_SERVICES} pull
+  
+  retry $max_retries ${DOCKER_COMPOSE_BINARY} ${ALL_SERVICES} pull
 fi
 
 echo "[$0] ***** Recreating containers if required... *****"
-${DOCKER_COMPOSE_BINARY} ${ALL_SERVICES} up -d --remove-orphans
+
+retry $max_retries ${DOCKER_COMPOSE_BINARY} ${ALL_SERVICES} up -d --remove-orphans
+
 echo "[$0] ***** Done updating containers *****"
 
 echo "[$0] ***** Clean unused images and volumes... *****"
-docker image prune -af
-docker volume prune  -f
+
+retry $max_retries docker image prune -af
+retry $max_retries docker volume prune -f
 
 echo "[$0] ***** Done! *****"
 exit 0
