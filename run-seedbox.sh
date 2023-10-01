@@ -26,10 +26,10 @@ for i in "$@"; do
   esac
 done
 
-cleanup_on_exit() {
-  rm -f rules.props *-vpn.props config.json
-}
-trap cleanup_on_exit EXIT
+#cleanup_on_exit() {
+#  rm -f rules.props *-vpn.props config.json
+#}
+#trap cleanup_on_exit EXIT
 
 echo-debug() {
   if [[ ${DEBUG} == "1" ]]; then echo "$@"; fi
@@ -174,7 +174,7 @@ for json in $(yq eval -o json config.yaml | jq -c ".services[]"); do
   # Take into account explicit filename if specified in config
   customFile=$(echo $json | jq -r .customFile)
   file="$name.yaml"
-  if [[ ${customFile} != "null" ]]; then 
+  if [[ ${customFile} != "null" ]]; then
     file=${customFile}
   fi
   echo-debug "[$0]    File: \"$file\"..."
@@ -257,7 +257,7 @@ for json in $(yq eval -o json config.yaml | jq -c ".services[]"); do
     if echo ${traefikService} | grep -vq "@"; then
       echo "http.services.${ruleId}.loadBalancer.servers.0.url: ${internalScheme}://${backendHost}:${internalPort}" >> rules.props
     fi
-    
+
   done
 done
 

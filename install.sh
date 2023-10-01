@@ -191,4 +191,3 @@ SEEDBOX_DIR=$(pwd)
 sudo bash init.sh
 
 # Run run-seedbox.sh
-sudo bash run-seedbox.sh
